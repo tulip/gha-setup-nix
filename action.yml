@@ -1,0 +1,61 @@
+name: Setup Nix Environment
+description: Setup environment to use Nix with Tulip credentials and caches
+
+inputs:
+  github_pa_token:
+    description: GitHub Personal Access Token
+    required: true 
+    type: string
+
+  yucca_token:
+    description: Cachix Yucca Store Token ( Required for use_cachix )
+    required: false
+    type: string
+
+  nixpkgs_channel:
+    description: Nixpkgs Channel for NIX_PATH
+    required: true
+    type: string
+    default: nixpkgs-22.05
+
+  use_cachix:
+    description: Whether to use Cachix with Yucca store
+    required: true
+    type: boolean
+    default: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Nix Setup
+      uses: cachix/install-nix-action@11f4ad19be46fd34c005a2864996d8f197fb51c6
+      with:
+        nix_path: nixpkgs=channel:${{ inputs.nixpkgs_channel }}
+        extra_nix_config: |
+          experimental-features = nix-command flakes
+          access-tokens = github.com=${{ inputs.github_pa_token }}
+          netrc-file = /home/runner/.config/nix/netrc
+          substituters = https://cache.nixos.org
+          trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+          max-jobs = auto
+          cores = 0
+          substitute = true
+          builders-use-substitutes = true
+          fallback = true
+          connect-timeout = 5
+          stalled-download-timeout = 90
+          timeout = 0
+
+    - name: Netrc Setup
+      shell: bash
+      run: |
+        mkdir -p /home/runner/.config/nix
+        echo "machine npm.pkg.github.com password ${{ inputs.github_pa_token }}" >> /home/runner/.config/nix/netrc
+        echo "machine api.github.com password ${{ inputs.github_pa_token }}" >> /home/runner/.config/nix/netrc
+
+    - name: Cachix Setup
+      uses: cachix/cachix-action@f5f67badd061acb62b5c6e25e763572ca8317004
+      if: ${{ inputs.use_cachix == true }}
+      with:
+        name: yucca
+        authToken: ${{ inputs.yucca_token }}

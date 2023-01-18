@@ -1,0 +1,26 @@
+# gha-setup-nix
+Setup runner environment to use Nix with Tulip credentials and caches.
+
+* inputs
+** github_pa_token
+- description :: GitHub Personal Access Token
+- required :: true 
+- type :: string
+
+** yucca_token
+- description :: Cachix Yucca Store Token ( Required for use_cachix )
+- required :: false
+- type :: string
+
+** nixpkgs_channel
+- description :: Nixpkgs Channel for NIX_PATH
+- required :: true
+- type :: string
+- default :: nixpkgs-22.05
+
+** use_cachix
+- description :: Whether to use Cachix with Yucca store
+- required :: true
+- type :: boolean
+- default :: true
+
