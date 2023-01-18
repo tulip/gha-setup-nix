@@ -48,8 +48,9 @@ jobs:
   my-job:
     runs-on: ubuntu-latest
     steps:
-      # This is where the magic happens
-      - uses: tulip/gha-setup-nix
+      # This is where the magic happens.
+      # Note that you /should/ really use a full rev SHA instead of a tag.
+      - uses: tulip/gha-setup-nix@v1
         with:
           github_pa_token: ${{ secrets.TULIP_BUILD_GITHUB_ACTION_TOKEN }}
           yucca_token: ${{ secrets.YUCCA_TOKEN }}
