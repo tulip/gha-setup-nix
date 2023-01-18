@@ -8,19 +8,75 @@ Setup runner environment to use Nix with Tulip credentials and caches.
 - type :: string
 
 ** yucca_token
-- description :: Cachix Yucca Store Token ( Required for use_cachix )
+- description :: Cachix Yucca Store Token ( Required for =use_cachix= )
 - required :: false
 - type :: string
 
 ** nixpkgs_channel
-- description :: Nixpkgs Channel for NIX_PATH
+- description :: Nixpkgs Channel for =NIX_PATH=
 - required :: true
 - type :: string
-- default :: nixpkgs-22.05
+- default :: =nixpkgs-22.05=
 
 ** use_cachix
 - description :: Whether to use Cachix with Yucca store
 - required :: true
 - type :: boolean
-- default :: true
+- default :: =true=
 
+* Example Usage
+#+BEGIN_SRC yaml
+# Boiler plate stuff
+name: Example Job
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - **/*.nix
+      - **/flake.lock
+  pull_request:
+    branches:
+      - main
+    paths:
+      - **/*.nix
+      - **/flake.lock
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  my-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      # This is where the magic happens
+      - uses: tulip/gha-setup-nix
+        with:
+          github_pa_token: ${{ secrets.TULIP_BUILD_GITHUB_ACTION_TOKEN }}
+          yucca_token: ${{ secrets.YUCCA_TOKEN }}
+      # Lets do a Nix thing. Notice that we don't have to checkout.
+      # Nix will perform the repo checkout for us with `FLAKE_REF'.
+      - name: All Checks
+        id: checks
+        shell: bash
+        run: |
+          set -eu;
+          set -o pipefail;
+          FLAKE_REF="github/tulip/my-repo-name/$GITHUB_REF";
+          echo "Running system independent eval checks:" >&2;
+          nix flake check          \
+            -L                     \
+            --show-trace           \
+            --no-update-lock-file  \
+            "$FLAKE_REF"           \
+          ;
+          echo "Running system dependent build checks:" >&2;
+          nix flake check          \
+            -L                     \
+            --show-trace           \
+            --no-update-lock-file  \
+            --system x86_64-linux  \
+            "$FLAKE_REF"           \
+          ;
+          echo "Great Success" >&2;
+#+END_SRC
