@@ -47,7 +47,6 @@ concurrency:
 jobs:
   my-job:
     runs-on: ubuntu-latest
-
     steps:
       # This is where the magic happens
       - uses: tulip/gha-setup-nix
@@ -62,7 +61,7 @@ jobs:
         run: |
           set -eu;
           set -o pipefail;
-          FLAKE_REF="github/tulip/my-repo-name/$GITHUB_REF";
+          FLAKE_REF="github:tulip/my-repo-name/$GITHUB_REF";
           echo "Running system independent eval checks:" >&2;
           nix flake check          \
             -L                     \
